@@ -37,6 +37,9 @@ pub struct UtilityOptions {
 
     #[arg(short = 't', long)]
     pub tenant_id: Option<String>,
+
+    #[arg(short = 'b', long, default_value_t = 1000)]
+    pub batch_size: u32
 }
 
 #[tokio::main]
@@ -138,7 +141,7 @@ async fn main() -> ApplicationResult<()> {
     };
     let pg_connection = pg_connection_read(&pq_store).await.unwrap();
     let multi_progress_bar = indicatif::MultiProgress::new();
-    let batch_size = 1000u32;
+    let batch_size = cmd_line.batch_size;
     let merchant_stores_count = get_merchant_stores(&pg_connection).await?;
 
     let merchant_progress_bar = multi_progress_bar.add(
