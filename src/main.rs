@@ -10,9 +10,6 @@ use backfill_scripe::{
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, QueryDsl};
 use error_stack::ResultExt;
-use hyperswitch_domain_models::
-    merchant_key_store::MerchantKeyStore
-;
 use indicatif::ProgressBar;
 use router::{
     configs::settings::Settings,
@@ -27,9 +24,7 @@ use router::{
     routes::metrics,
     services::get_store,
 };
-use storage_impl::{
-    connection::pg_connection_read, database::store::ReplicaStore, redis::RedisStore, KVRouterStore,
-};
+use storage_impl::{connection::pg_connection_read, redis::RedisStore};
 
 use async_bb8_diesel::AsyncRunQueryDsl;
 
@@ -143,60 +138,71 @@ async fn main() -> ApplicationResult<()> {
     };
     let pg_connection = pg_connection_read(&pq_store).await.unwrap();
     let multi_progress_bar = indicatif::MultiProgress::new();
-    let merchant_stores = get_merchant_stores(&pg_connection, &pq_store, &kms)
-        .await
-        .change_context(ApplicationError::ConfigurationError)?;
+    let batch_size = 1000u32;
+    let merchant_stores_count = get_merchant_stores(&pg_connection).await?;
+
     let merchant_progress_bar = multi_progress_bar.add(
-        ProgressBar::new(merchant_stores.len() as u64)
+        ProgressBar::new(merchant_stores_count as u64)
             .with_style(backfill_scripe::progress_style())
             .with_message("Merchants:"),
     );
-    let batch_size = 1000;
-    for mks in merchant_stores {
-        merchant_progress_bar.inc(1);
-        merchant_progress_bar
-            .set_message(format!("Merchant: {}", mks.merchant_id.get_string_repr()));
+    for batch_offset in (0..merchant_stores_count as u32).step_by(batch_size as usize) {
+        let merchant_stores = pq_store
+            .get_all_key_stores(
+                &kms,
+                &Secret::new(pq_store.get_master_key().to_vec()),
+                batch_offset,
+                batch_offset + batch_size,
+            )
+            .await
+            .change_context(ApplicationError::ConfigurationError)?;
+        for mks in merchant_stores {
+            merchant_progress_bar.inc(1);
+            merchant_progress_bar
+                .set_message(format!("Merchant: {}", mks.merchant_id.get_string_repr()));
 
-        dump_payment_attempts(
-            &kafka_producer,
-            &pg_connection,
-            &multi_progress_bar,
-            tenant.clone(),
-            &mks,
-            batch_size,
-        )
-        .await?;
-        dump_payment_intents(
-            &kafka_producer,
-            &pg_connection,
-            &multi_progress_bar,
-            tenant.clone(),
-            &kms,
-            &mks,
-            batch_size,
-        )
-        .await?;
-        dump_refunds(
-            &kafka_producer,
-            &pg_connection,
-            &multi_progress_bar,
-            tenant.clone(),
-            &kms,
-            &mks,
-            batch_size,
-        )
-        .await?;
-        dump_disputes(
-            &kafka_producer,
-            &pg_connection,
-            &multi_progress_bar,
-            tenant.clone(),
-            &kms,
-            &mks,
-            batch_size,
-        )
-        .await?;
+            dump_payment_attempts(
+                &kafka_producer,
+                &pg_connection,
+                &multi_progress_bar,
+                tenant.clone(),
+                &mks,
+                batch_size,
+            )
+            .await?;
+            dump_payment_intents(
+                &kafka_producer,
+                &pg_connection,
+                &multi_progress_bar,
+                tenant.clone(),
+                &kms,
+                &mks,
+                batch_size,
+            )
+            .await?;
+            dump_refunds(
+                &kafka_producer,
+                &pg_connection,
+                &multi_progress_bar,
+                tenant.clone(),
+                &kms,
+                &mks,
+                batch_size,
+            )
+            .await?;
+            dump_disputes(
+                &kafka_producer,
+                &pg_connection,
+                &multi_progress_bar,
+                tenant.clone(),
+                &kms,
+                &mks,
+                batch_size,
+            )
+            .await?;
+        }
     }
+
     // Get Payment Counts from Payment Table
     // For each payment_batch
     // For each pament
@@ -204,24 +210,10 @@ async fn main() -> ApplicationResult<()> {
     Ok(())
 }
 
-async fn get_merchant_stores(
-    conn: &PgPooledConn,
-    store: &KVRouterStore<ReplicaStore>,
-    kms: &KeyManagerState,
-) -> ApplicationResult<Vec<MerchantKeyStore>> {
-    let merchant_count: i64 = diesel_models::merchant_key_store::MerchantKeyStore::table()
+async fn get_merchant_stores(conn: &PgPooledConn) -> ApplicationResult<i64> {
+    diesel_models::merchant_key_store::MerchantKeyStore::table()
         .count()
         .get_result_async(conn)
         .await
-        .change_context(ApplicationError::ConfigurationError)?;
-    let merchant_stores = store
-        .get_all_key_stores(
-            kms,
-            &Secret::new(store.get_master_key().to_vec()),
-            0,
-            merchant_count.try_into().unwrap(),
-        )
-        .await
-        .change_context(ApplicationError::ConfigurationError)?;
-    Ok(merchant_stores)
+        .change_context(ApplicationError::ConfigurationError)
 }

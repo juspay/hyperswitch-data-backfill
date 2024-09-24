@@ -5,14 +5,18 @@ use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
 use diesel_models::{schema::payment_intent::merchant_id, PgPooledConn};
 use indicatif::MultiProgress;
 
+use async_bb8_diesel::AsyncRunQueryDsl;
 use diesel_models::payment_intent::PaymentIntent as DieselPaymentIntent;
 use error_stack::ResultExt;
 use hyperswitch_domain_models::{
     behaviour::Conversion, merchant_key_store::MerchantKeyStore,
     payments::PaymentIntent as DomainPaymentIntent,
 };
-use router::db::{errors::{ApplicationResult, ApplicationError}, kafka_store::TenantID, KafkaProducer};
-use async_bb8_diesel::AsyncRunQueryDsl;
+use router::db::{
+    errors::{ApplicationError, ApplicationResult},
+    kafka_store::TenantID,
+    KafkaProducer,
+};
 
 pub async fn dump_payment_intents(
     kafka_producer: &KafkaProducer,
@@ -21,7 +25,7 @@ pub async fn dump_payment_intents(
     tenant_id: TenantID,
     key_manager_state: &KeyManagerState,
     merchant_key_store: &MerchantKeyStore,
-    batch_size: usize,
+    batch_size: u32,
 ) -> ApplicationResult<()> {
     let diesel_objects_count: i64 = DieselPaymentIntent::table()
         .count()
@@ -40,7 +44,7 @@ pub async fn dump_payment_intents(
     let shared_kafka = Arc::new(kafka_producer.clone());
     let shared_kms = Arc::new(key_manager_state.clone());
     let shared_mks = Arc::new(merchant_key_store.clone());
-    for batch_offset in (0..diesel_objects_count).step_by(batch_size) {
+    for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let payment_intents = DieselPaymentIntent::table()
             .filter(merchant_id.eq(merchant_key_store.merchant_id.clone()))
             .limit(batch_size as i64)

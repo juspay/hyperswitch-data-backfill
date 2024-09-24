@@ -3,9 +3,7 @@ use hyperswitch_interfaces::secrets_interface::{
     secret_state::{RawSecret, SecuredSecret},
     SecretManagementInterface,
 };
-use router::
-    configs::settings::{self, Settings}
-;
+use router::configs::settings::{self, Settings};
 /// # Panics
 ///
 /// Will panic even if kms decryption fails for at least one field

@@ -22,7 +22,7 @@ pub async fn dump_payment_attempts(
     multi_progress_bar: &MultiProgress,
     tenant_id: TenantID,
     mks: &MerchantKeyStore,
-    batch_size: usize,
+    batch_size: u32,
 ) -> ApplicationResult<()> {
     let payment_attempts_count: i64 = DieselPaymentAttempt::table()
         .filter(merchant_id.eq(mks.merchant_id.clone()))
@@ -37,7 +37,7 @@ pub async fn dump_payment_attempts(
             .with_message("Payment Attempts:"),
     );
 
-    for batch_offset in (0..payment_attempts_count).step_by(batch_size) {
+    for batch_offset in (0..payment_attempts_count).step_by(batch_size as usize) {
         let payment_attempts = DieselPaymentAttempt::table()
             .filter(merchant_id.eq(mks.merchant_id.clone()))
             .limit(batch_size as i64)

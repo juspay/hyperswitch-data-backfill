@@ -20,7 +20,7 @@ pub async fn dump_disputes(
     tenant_id: TenantID,
     _key_manager_state: &KeyManagerState,
     merchant_key_store: &MerchantKeyStore,
-    batch_size: usize,
+    batch_size: u32,
 ) -> ApplicationResult<()> {
     let diesel_objects_count: i64 = Dispute::table()
         .count()
@@ -35,7 +35,7 @@ pub async fn dump_disputes(
             .with_style(crate::progress_style())
             .with_message("Disptues:"),
     );
-    for batch_offset in (0..diesel_objects_count).step_by(batch_size) {
+    for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let disputes = Dispute::table()
             .filter(merchant_id.eq(merchant_key_store.merchant_id.clone()))
             .limit(batch_size as i64)

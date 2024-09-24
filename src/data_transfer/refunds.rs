@@ -1,14 +1,17 @@
-
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
 use diesel_models::{schema::refund::merchant_id, PgPooledConn};
 use indicatif::MultiProgress;
 
+use async_bb8_diesel::AsyncRunQueryDsl;
 use diesel_models::refund::Refund;
 use error_stack::ResultExt;
 use hyperswitch_domain_models::merchant_key_store::MerchantKeyStore;
-use router::db::{errors::{ApplicationResult, ApplicationError}, kafka_store::TenantID, KafkaProducer};
-use async_bb8_diesel::AsyncRunQueryDsl;
+use router::db::{
+    errors::{ApplicationError, ApplicationResult},
+    kafka_store::TenantID,
+    KafkaProducer,
+};
 
 pub async fn dump_refunds(
     kafka_producer: &KafkaProducer,
@@ -17,7 +20,7 @@ pub async fn dump_refunds(
     tenant_id: TenantID,
     _key_manager_state: &KeyManagerState,
     merchant_key_store: &MerchantKeyStore,
-    batch_size: usize,
+    batch_size: u32,
 ) -> ApplicationResult<()> {
     let diesel_objects_count: i64 = Refund::table()
         .count()
@@ -32,7 +35,7 @@ pub async fn dump_refunds(
             .with_style(crate::progress_style())
             .with_message("Refunds:"),
     );
-    for batch_offset in (0..diesel_objects_count).step_by(batch_size) {
+    for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let refunds = Refund::table()
             .filter(merchant_id.eq(merchant_key_store.merchant_id.clone()))
             .limit(batch_size as i64)
