@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-bb8-diesel = { git = "https://github.com/jarnura/async-bb8-diesel", rev = "53b4ab901aab7635c8215fd1c2d542c8db443094" }
-router = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
+router = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc", features = ["release"] }
 diesel_models = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
 storage_impl = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
 router_env = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
