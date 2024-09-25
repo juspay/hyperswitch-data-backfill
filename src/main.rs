@@ -138,6 +138,8 @@ async fn main() -> ApplicationResult<()> {
         enabled: kmc.enabled,
         url: kmc.url.clone(),
         request_id: None,
+        ca: kmc.ca.clone(),
+        cert: kmc.cert.clone(),
     };
     let pg_connection = pg_connection_read(&pq_store).await.unwrap();
     let multi_progress_bar = indicatif::MultiProgress::new();

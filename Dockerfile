@@ -35,9 +35,7 @@ ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL="sparse"
 COPY . .
 RUN cargo build \
     --release \
-    --no-default-features \
-
-
+    --no-default-features
 
 FROM debian:bookworm
 
