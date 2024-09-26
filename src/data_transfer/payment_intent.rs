@@ -38,7 +38,7 @@ pub async fn dump_payment_intents(
         multi_progress_bar.add(
             indicatif::ProgressBar::new(diesel_objects_count.try_into().unwrap())
                 .with_style(crate::progress_style())
-                .with_message("Payment Intents:"),
+                .with_message(format!("{:?} Payment Intents:", merchant_key_store.merchant_id)),
         ),
     );
     let shared_kafka = Arc::new(kafka_producer.clone());
@@ -57,7 +57,7 @@ pub async fn dump_payment_intents(
             multi_progress_bar.add(
                 indicatif::ProgressBar::new(batch_size as u64)
                     .with_style(crate::progress_style())
-                    .with_message("Payment Intents Batch:"),
+                    .with_message(format!("{:?} Payment Intents Batch:", merchant_key_store.merchant_id)),
             ),
         );
         let mut task_set: tokio::task::JoinSet<ApplicationResult<()>> = tokio::task::JoinSet::new();

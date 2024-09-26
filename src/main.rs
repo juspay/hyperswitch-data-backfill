@@ -24,7 +24,7 @@ use router::{
     routes::metrics,
     services::get_store,
 };
-use storage_impl::{connection::pg_connection_read, redis::RedisStore};
+use storage_impl::{connection::pg_connection_read, redis::RedisStore, DatabaseStore};
 
 use async_bb8_diesel::AsyncRunQueryDsl;
 
@@ -39,7 +39,10 @@ pub struct UtilityOptions {
     pub tenant_id: Option<String>,
 
     #[arg(short = 'b', long, default_value_t = 1000)]
-    pub batch_size: u32
+    pub batch_size: u32,
+
+    #[arg(short = 'p', long, default_value_t = 5)]
+    pub parallel: usize,
 }
 
 #[tokio::main]
@@ -151,6 +154,7 @@ async fn main() -> ApplicationResult<()> {
             .with_style(backfill_scripe::progress_style())
             .with_message("Merchants:"),
     );
+    let replica_pool = pq_store.get_replica_pool().to_owned();
     for batch_offset in (0..merchant_stores_count as u32).step_by(batch_size as usize) {
         let merchant_stores = pq_store
             .get_all_key_stores(
@@ -161,50 +165,65 @@ async fn main() -> ApplicationResult<()> {
             )
             .await
             .change_context(ApplicationError::ConfigurationError)?;
-        for mks in merchant_stores {
-            merchant_progress_bar.inc(1);
-            merchant_progress_bar
-                .set_message(format!("Merchant: {}", mks.merchant_id.get_string_repr()));
 
-            dump_payment_attempts(
-                &kafka_producer,
-                &pg_connection,
-                &multi_progress_bar,
-                tenant.clone(),
-                &mks,
-                batch_size,
-            )
-            .await?;
-            dump_payment_intents(
-                &kafka_producer,
-                &pg_connection,
-                &multi_progress_bar,
-                tenant.clone(),
-                &kms,
-                &mks,
-                batch_size,
-            )
-            .await?;
-            dump_refunds(
-                &kafka_producer,
-                &pg_connection,
-                &multi_progress_bar,
-                tenant.clone(),
-                &kms,
-                &mks,
-                batch_size,
-            )
-            .await?;
-            dump_disputes(
-                &kafka_producer,
-                &pg_connection,
-                &multi_progress_bar,
-                tenant.clone(),
-                &kms,
-                &mks,
-                batch_size,
-            )
-            .await?;
+        for merchant_stores_batch in merchant_stores.chunks(cmd_line.parallel) {
+            let results = merchant_stores_batch.into_iter().cloned().map(|mks| {
+
+                let pool = replica_pool.clone();
+                let mp_bar = merchant_progress_bar.clone();
+                let tenant_int = tenant.clone();
+                let kafka_producer_int = kafka_producer.clone();
+                let multi_progress_bar_int = multi_progress_bar.clone();
+                let kms_int = kms.clone();
+                (mks, pool, mp_bar, tenant_int, kafka_producer_int, multi_progress_bar_int, kms_int)
+            }).map(|(mks, pool, mp_bar, tenant_int, kafka_producer_int, multi_progress_bar_int, kms_int)| tokio::spawn(async move {
+                mp_bar.inc(1);
+                let pg_connection = pool.get().await.change_context(ApplicationError::ConfigurationError)?;
+
+                dump_payment_attempts(
+                    &kafka_producer_int,
+                    &pg_connection,
+                    &multi_progress_bar_int,
+                    tenant_int.clone(),
+                    &mks,
+                    batch_size,
+                )
+                .await?;
+                dump_payment_intents(
+                    &kafka_producer_int,
+                    &pg_connection,
+                    &multi_progress_bar_int,
+                    tenant_int.clone(),
+                    &kms_int,
+                    &mks,
+                    batch_size,
+                )
+                .await?;
+                dump_refunds(
+                    &kafka_producer_int,
+                    &pg_connection,
+                    &multi_progress_bar_int,
+                    tenant_int.clone(),
+                    &kms_int,
+                    &mks,
+                    batch_size,
+                )
+                .await?;
+                dump_disputes(
+                    &kafka_producer_int,
+                    &pg_connection,
+                    &multi_progress_bar_int,
+                    tenant_int.clone(),
+                    &kms_int,
+                    &mks,
+                    batch_size,
+                )
+                .await?;
+            Ok(())
+            })).collect::<Vec<tokio::task::JoinHandle<ApplicationResult<()>>>>();
+            for res in futures::future::join_all(results).await {
+                res.change_context(ApplicationError::ConfigurationError)?.change_context(ApplicationError::ConfigurationError)?;
+            }
         }
     }
 

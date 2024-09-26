@@ -32,10 +32,12 @@ ENV RUST_BACKTRACE="short"
 # Use cargo's sparse index protocol
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL="sparse"
 
-COPY . .
+RUN git clone https://github.com/lsampras/hyperswitch-data-backfill.git --depth 1 .
 RUN cargo build \
-    --release \
-    --no-default-features
+    --release
+
+
+
 
 FROM debian:bookworm
 

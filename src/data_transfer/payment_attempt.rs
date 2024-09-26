@@ -34,7 +34,7 @@ pub async fn dump_payment_attempts(
     let pa_progress_bar = multi_progress_bar.add(
         indicatif::ProgressBar::new(payment_attempts_count.try_into().unwrap())
             .with_style(crate::progress_style())
-            .with_message("Payment Attempts:"),
+            .with_message(format!("{:?} Payment Attempts:", mks.merchant_id)),
     );
 
     for batch_offset in (0..payment_attempts_count).step_by(batch_size as usize) {
@@ -42,14 +42,14 @@ pub async fn dump_payment_attempts(
             .filter(merchant_id.eq(mks.merchant_id.clone()))
             .limit(batch_size as i64)
             .offset(batch_offset)
-            .load_async::<DieselPaymentAttempt>(conn)
+            .get_results_async::<DieselPaymentAttempt>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
             .unwrap();
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
                 .with_style(crate::progress_style())
-                .with_message("Payment Attempts Batch:"),
+                .with_message(format!("{:?} Payment Attempts Batch:", mks.merchant_id)),
         );
         for pa in payment_attempts {
             pa_progress_bar.inc(1);

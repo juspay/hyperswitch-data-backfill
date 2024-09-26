@@ -33,7 +33,7 @@ pub async fn dump_refunds(
     let refund_progress_bar = multi_progress_bar.add(
         indicatif::ProgressBar::new(diesel_objects_count.try_into().unwrap())
             .with_style(crate::progress_style())
-            .with_message("Refunds:"),
+            .with_message(format!("{} Refunds:", merchant_key_store.merchant_id.get_string_repr())),
     );
     for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let refunds = Refund::table()
@@ -47,7 +47,7 @@ pub async fn dump_refunds(
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
                 .with_style(crate::progress_style())
-                .with_message("Refunds Batch:"),
+                .with_message(format!("{} Refunds Batch:", merchant_key_store.merchant_id.get_string_repr())),
         );
         for refund in refunds {
             // tokio::time::sleep(Duration::from_secs(1)).await;
