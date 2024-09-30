@@ -43,6 +43,9 @@ pub struct UtilityOptions {
 
     #[arg(short = 'p', long, default_value_t = 5)]
     pub parallel: usize,
+    
+    #[arg(short = 'm', long)]
+    pub merchant_id: Option<String>,
 }
 
 #[tokio::main]
@@ -141,7 +144,9 @@ async fn main() -> ApplicationResult<()> {
         enabled: kmc.enabled,
         url: kmc.url.clone(),
         request_id: None,
+        #[cfg(feature = "release")]
         ca: kmc.ca.clone(),
+        #[cfg(feature = "release")]
         cert: kmc.cert.clone(),
     };
     let pg_connection = pg_connection_read(&pq_store).await.unwrap();
@@ -156,15 +161,18 @@ async fn main() -> ApplicationResult<()> {
     );
     let replica_pool = pq_store.get_replica_pool().to_owned();
     for batch_offset in (0..merchant_stores_count as u32).step_by(batch_size as usize) {
-        let merchant_stores = pq_store
+        let merchant_stores = match cmd_line.merchant_id {
+            Some(ref mid) => pq_store.get_merchant_key_store_by_merchant_id(&kms,&common_utils::id_type::MerchantId::wrap(mid.clone()).change_context(ApplicationError::ConfigurationError)? , &Secret::new(pq_store.get_master_key().to_vec())).await.map(|i| vec![i]),
+            None => pq_store
             .get_all_key_stores(
                 &kms,
                 &Secret::new(pq_store.get_master_key().to_vec()),
                 batch_offset,
                 batch_offset + batch_size,
             )
-            .await
-            .change_context(ApplicationError::ConfigurationError)?;
+            .await,
+        }.change_context(ApplicationError::ConfigurationError)?;
+        
 
         for merchant_stores_batch in merchant_stores.chunks(cmd_line.parallel) {
             let results = merchant_stores_batch.into_iter().cloned().map(|mks| {

@@ -33,8 +33,7 @@ ENV RUST_BACKTRACE="short"
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL="sparse"
 
 RUN git clone https://github.com/lsampras/hyperswitch-data-backfill.git --depth 1 .
-RUN cargo build \
-    --release
+RUN cargo build --release --features release
 
 
 

@@ -164,6 +164,7 @@ pub async fn fetch_raw_secrets(
         opensearch: conf.opensearch,
         kv_config: conf.kv_config,
         frm: conf.frm,
+        #[cfg(feature = "release")]
         email: conf.email,
         report_download_config: conf.report_download_config,
         events: conf.events,
