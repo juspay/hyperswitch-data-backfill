@@ -33,12 +33,19 @@ pub async fn dump_payment_intents(
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .unwrap();
+        .expect("Failed to get payment intents count");
     let pi_progress_bar = Arc::new(
         multi_progress_bar.add(
-            indicatif::ProgressBar::new(diesel_objects_count.try_into().unwrap())
-                .with_style(crate::progress_style())
-                .with_message(format!("{:?} Payment Intents:", merchant_key_store.merchant_id)),
+            indicatif::ProgressBar::new(
+                diesel_objects_count
+                    .try_into()
+                    .expect("Failed to convert intent count to u64"),
+            )
+            .with_style(crate::progress_style())
+            .with_message(format!(
+                "{:?} Payment Intents:",
+                merchant_key_store.merchant_id
+            )),
         ),
     );
     let shared_kafka = Arc::new(kafka_producer.clone());
@@ -52,12 +59,15 @@ pub async fn dump_payment_intents(
             .load_async::<DieselPaymentIntent>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .unwrap();
+            .expect("failed to get payment intents");
         let batch_progress_bar = Arc::new(
             multi_progress_bar.add(
                 indicatif::ProgressBar::new(batch_size as u64)
                     .with_style(crate::progress_style())
-                    .with_message(format!("{:?} Payment Intents Batch:", merchant_key_store.merchant_id)),
+                    .with_message(format!(
+                        "{:?} Payment Intents Batch:",
+                        merchant_key_store.merchant_id
+                    )),
             ),
         );
         let mut task_set: tokio::task::JoinSet<ApplicationResult<()>> = tokio::task::JoinSet::new();

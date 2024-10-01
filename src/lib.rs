@@ -3,5 +3,5 @@ pub mod encryption;
 
 pub fn progress_style() -> indicatif::ProgressStyle {
     indicatif::ProgressStyle::with_template(" {msg}\n{wide_bar} {pos}/{len} [{elapsed_precise}]")
-        .unwrap()
+        .expect("Failed to generate progress style")
 }

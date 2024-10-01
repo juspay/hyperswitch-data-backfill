@@ -30,11 +30,15 @@ pub async fn dump_payment_attempts(
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .unwrap();
+        .expect("Failed to get payment attempts count");
     let pa_progress_bar = multi_progress_bar.add(
-        indicatif::ProgressBar::new(payment_attempts_count.try_into().unwrap())
-            .with_style(crate::progress_style())
-            .with_message(format!("{:?} Payment Attempts:", mks.merchant_id)),
+        indicatif::ProgressBar::new(
+            payment_attempts_count
+                .try_into()
+                .expect("Failed to convert payment attempts count to u64"),
+        )
+        .with_style(crate::progress_style())
+        .with_message(format!("{:?} Payment Attempts:", mks.merchant_id)),
     );
 
     for batch_offset in (0..payment_attempts_count).step_by(batch_size as usize) {
@@ -45,7 +49,7 @@ pub async fn dump_payment_attempts(
             .get_results_async::<DieselPaymentAttempt>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .unwrap();
+            .expect("Failed to get payment attempts");
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
                 .with_style(crate::progress_style())

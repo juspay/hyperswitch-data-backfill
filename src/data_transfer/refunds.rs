@@ -28,12 +28,19 @@ pub async fn dump_refunds(
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .unwrap();
+        .expect("Failed to get refunds count");
     // println!("{:?}", diesel_objects_count);
     let refund_progress_bar = multi_progress_bar.add(
-        indicatif::ProgressBar::new(diesel_objects_count.try_into().unwrap())
-            .with_style(crate::progress_style())
-            .with_message(format!("{} Refunds:", merchant_key_store.merchant_id.get_string_repr())),
+        indicatif::ProgressBar::new(
+            diesel_objects_count
+                .try_into()
+                .expect("Failed to convert refund count to u64"),
+        )
+        .with_style(crate::progress_style())
+        .with_message(format!(
+            "{} Refunds:",
+            merchant_key_store.merchant_id.get_string_repr()
+        )),
     );
     for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let refunds = Refund::table()
@@ -43,11 +50,14 @@ pub async fn dump_refunds(
             .get_results_async::<Refund>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .unwrap();
+            .expect("Failed to get refunds");
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
                 .with_style(crate::progress_style())
-                .with_message(format!("{} Refunds Batch:", merchant_key_store.merchant_id.get_string_repr())),
+                .with_message(format!(
+                    "{} Refunds Batch:",
+                    merchant_key_store.merchant_id.get_string_repr()
+                )),
         );
         for refund in refunds {
             // tokio::time::sleep(Duration::from_secs(1)).await;
