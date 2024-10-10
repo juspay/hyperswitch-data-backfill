@@ -1,7 +1,7 @@
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::payment_attempt::merchant_id, PgPooledConn};
+use diesel_models::{schema::payment_attempt::{merchant_id, created_at}, PgPooledConn};
 use indicatif::MultiProgress;
-
+use time::PrimitiveDateTime;
 use diesel_models::payment_attempt::PaymentAttempt as DieselPaymentAttempt;
 use error_stack::ResultExt;
 use hyperswitch_domain_models::{
@@ -24,8 +24,10 @@ pub async fn dump_payment_attempts(
     mks: &MerchantKeyStore,
     batch_size: u32,
 ) -> ApplicationResult<()> {
+    let start_time = PrimitiveDateTime::MIN;
     let payment_attempts_count: i64 = DieselPaymentAttempt::table()
         .filter(merchant_id.eq(mks.merchant_id.clone()))
+        .filter(created_at.between(start_time, PrimitiveDateTime::MAX))
         .count()
         .get_result_async(conn)
         .await

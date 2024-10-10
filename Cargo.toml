@@ -15,6 +15,7 @@ router_env = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629
 hyperswitch_interfaces = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
 common_utils = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
 hyperswitch_domain_models = { git = "https://github.com/juspay/hyperswitch", rev = "dccb8d4e629d615a69f6922a96e72f10d3410bfc" }
+time = { version = "0.3.35", features = ["serde", "serde-well-known", "std", "parsing", "serde-human-readable"] }
 diesel = { version = "2.2.3", features = ["postgres"] }
 error-stack = "0.4.1"
 tokio = "1.40.0"
