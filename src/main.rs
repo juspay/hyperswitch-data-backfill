@@ -5,7 +5,7 @@ use backfill_scripe::{
         disputes::dump_disputes, payment_attempt::dump_payment_attempts,
         payment_intent::dump_payment_intents, refunds::dump_refunds,
     },
-    encryption::fetch_raw_secrets,
+    encryption::fetch_raw_secrets, utility::parse_to_primitive_datetime,
 };
 use common_utils::{id_type::MerchantId, types::keymanager::KeyManagerState};
 use diesel::{associations::HasTable, QueryDsl};
@@ -27,6 +27,7 @@ use router::{
 use storage_impl::{connection::pg_connection_read, redis::RedisStore, DatabaseStore};
 
 use async_bb8_diesel::AsyncRunQueryDsl;
+use time::PrimitiveDateTime;
 
 #[derive(clap::Parser, Default)]
 pub struct UtilityOptions {
@@ -46,6 +47,12 @@ pub struct UtilityOptions {
 
     #[arg(short = 'm', long)]
     pub merchant_id: Vec<String>,
+
+    #[arg(short = 's', long, default_value_t = String::from("0000-01-01 00:00:00.0"))]
+    pub start_date: String,
+
+    #[arg(short = 'e', long, default_value_t = (&PrimitiveDateTime::MAX).to_string())]
+    pub end_date: String,
 }
 
 #[tokio::main]
@@ -154,6 +161,11 @@ async fn main() -> ApplicationResult<()> {
         .expect("Failed to get pg connection");
     let multi_progress_bar = indicatif::MultiProgress::new();
     let batch_size = cmd_line.batch_size;
+    println!("{},  {}", &cmd_line.start_date, &cmd_line.end_date);
+    let start_date = parse_to_primitive_datetime(&cmd_line.start_date)
+        .expect("Failed to parse start_date");
+    let end_date = parse_to_primitive_datetime(&cmd_line.end_date)
+        .expect("Failed to parse end_date");
     let merchant_stores_count = if cmd_line.merchant_id.is_empty() {
         get_merchant_stores(&pg_connection).await?
     } else {
@@ -236,6 +248,8 @@ async fn main() -> ApplicationResult<()> {
                                 tenant_int.clone(),
                                 &mks,
                                 batch_size,
+                                start_date,
+                                end_date,
                             )
                             .await?;
                             dump_payment_intents(
@@ -246,6 +260,8 @@ async fn main() -> ApplicationResult<()> {
                                 &kms_int,
                                 &mks,
                                 batch_size,
+                                start_date,
+                                end_date,
                             )
                             .await?;
                             dump_refunds(
@@ -256,6 +272,8 @@ async fn main() -> ApplicationResult<()> {
                                 &kms_int,
                                 &mks,
                                 batch_size,
+                                start_date,
+                                end_date,
                             )
                             .await?;
                             dump_disputes(
@@ -266,6 +284,8 @@ async fn main() -> ApplicationResult<()> {
                                 &kms_int,
                                 &mks,
                                 batch_size,
+                                start_date,
+                                end_date,
                             )
                             .await?;
                             Ok(())
