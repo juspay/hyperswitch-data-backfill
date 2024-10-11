@@ -1,5 +1,5 @@
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::payment_attempt::merchant_id, PgPooledConn};
+use diesel_models::{schema::payment_attempt::{merchant_id, created_at}, PgPooledConn};
 use indicatif::MultiProgress;
 
 use diesel_models::payment_attempt::PaymentAttempt as DieselPaymentAttempt;
@@ -13,8 +13,8 @@ use router::{
     db::{kafka_store::TenantID, KafkaProducer},
 };
 use storage_impl::DataModelExt;
-
 use async_bb8_diesel::AsyncRunQueryDsl;
+use time::PrimitiveDateTime;
 
 pub async fn dump_payment_attempts(
     kafka_producer: &KafkaProducer,
@@ -23,9 +23,12 @@ pub async fn dump_payment_attempts(
     tenant_id: TenantID,
     mks: &MerchantKeyStore,
     batch_size: u32,
+    start_date: PrimitiveDateTime,
+    end_date: PrimitiveDateTime,
 ) -> ApplicationResult<()> {
     let payment_attempts_count: i64 = DieselPaymentAttempt::table()
         .filter(merchant_id.eq(mks.merchant_id.clone()))
+        .filter(created_at.between(start_date, end_date))
         .count()
         .get_result_async(conn)
         .await
@@ -44,6 +47,7 @@ pub async fn dump_payment_attempts(
     for batch_offset in (0..payment_attempts_count).step_by(batch_size as usize) {
         let payment_attempts = DieselPaymentAttempt::table()
             .filter(merchant_id.eq(mks.merchant_id.clone()))
+            .filter(created_at.between(start_date, end_date))
             .limit(batch_size as i64)
             .offset(batch_offset)
             .get_results_async::<DieselPaymentAttempt>(conn)

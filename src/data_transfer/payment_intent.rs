@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::payment_intent::merchant_id, PgPooledConn};
+use diesel_models::{schema::payment_intent::{merchant_id, created_at}, PgPooledConn};
 use indicatif::MultiProgress;
 
 use async_bb8_diesel::AsyncRunQueryDsl;
@@ -17,6 +17,7 @@ use router::db::{
     kafka_store::TenantID,
     KafkaProducer,
 };
+use time::PrimitiveDateTime;
 
 pub async fn dump_payment_intents(
     kafka_producer: &KafkaProducer,
@@ -26,10 +27,13 @@ pub async fn dump_payment_intents(
     key_manager_state: &KeyManagerState,
     merchant_key_store: &MerchantKeyStore,
     batch_size: u32,
+    start_date: PrimitiveDateTime,
+    end_date: PrimitiveDateTime,
 ) -> ApplicationResult<()> {
     let diesel_objects_count: i64 = DieselPaymentIntent::table()
         .count()
         .filter(merchant_id.eq(merchant_key_store.merchant_id.clone()))
+        .filter(created_at.between(start_date, end_date))
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
@@ -54,6 +58,7 @@ pub async fn dump_payment_intents(
     for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let payment_intents = DieselPaymentIntent::table()
             .filter(merchant_id.eq(merchant_key_store.merchant_id.clone()))
+            .filter(created_at.between(start_date, end_date))
             .limit(batch_size as i64)
             .offset(batch_offset)
             .load_async::<DieselPaymentIntent>(conn)
