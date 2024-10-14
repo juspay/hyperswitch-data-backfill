@@ -1,7 +1,8 @@
+use error_stack::ResultExt;
 use hyperswitch_interfaces::secrets_interface::{
     secret_handler::SecretsHandler,
     secret_state::{RawSecret, SecuredSecret},
-    SecretManagementInterface,
+    SecretManagementInterface, SecretsManagementError,
 };
 use router::configs::settings::{self, Settings};
 /// # Panics
@@ -10,12 +11,12 @@ use router::configs::settings::{self, Settings};
 pub async fn fetch_raw_secrets(
     conf: Settings<SecuredSecret>,
     secret_management_client: &dyn SecretManagementInterface,
-) -> Settings<RawSecret> {
+) -> error_stack::Result<Settings<RawSecret>, SecretsManagementError> {
     #[allow(clippy::expect_used)]
     let master_database =
         settings::Database::convert_to_raw_secret(conf.master_database, secret_management_client)
             .await
-            .expect("Failed to decrypt master database configuration");
+            .attach_printable("Failed to decrypt master database configuration")?;
 
     #[allow(clippy::expect_used)]
     let analytics = router::analytics::AnalyticsConfig::convert_to_raw_secret(
@@ -23,35 +24,35 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt analytics configuration");
+    .attach_printable("Failed to decrypt analytics configuration")?;
 
     #[allow(clippy::expect_used)]
     let replica_database =
         settings::Database::convert_to_raw_secret(conf.replica_database, secret_management_client)
             .await
-            .expect("Failed to decrypt replica database configuration");
+            .attach_printable("Failed to decrypt replica database configuration")?;
 
     #[allow(clippy::expect_used)]
     let secrets = settings::Secrets::convert_to_raw_secret(conf.secrets, secret_management_client)
         .await
-        .expect("Failed to decrypt secrets");
+        .attach_printable("Failed to decrypt secrets")?;
 
     #[allow(clippy::expect_used)]
     let forex_api =
         settings::ForexApi::convert_to_raw_secret(conf.forex_api, secret_management_client)
             .await
-            .expect("Failed to decrypt forex api configs");
+            .attach_printable("Failed to decrypt forex api configs")?;
 
     #[allow(clippy::expect_used)]
     let jwekey = settings::Jwekey::convert_to_raw_secret(conf.jwekey, secret_management_client)
         .await
-        .expect("Failed to decrypt jwekey configs");
+        .attach_printable("Failed to decrypt jwekey configs")?;
 
     #[allow(clippy::expect_used)]
     let api_keys =
         settings::ApiKeys::convert_to_raw_secret(conf.api_keys, secret_management_client)
             .await
-            .expect("Failed to decrypt api_keys configs");
+            .attach_printable("Failed to decrypt api_keys configs")?;
 
     #[allow(clippy::expect_used)]
     let connector_onboarding = settings::ConnectorOnboarding::convert_to_raw_secret(
@@ -59,7 +60,7 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt connector_onboarding configs");
+    .attach_printable("Failed to decrypt connector_onboarding configs")?;
 
     #[allow(clippy::expect_used)]
     let applepay_decrypt_keys = settings::ApplePayDecryptConfig::convert_to_raw_secret(
@@ -67,7 +68,7 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt applepay decrypt configs");
+    .attach_printable("Failed to decrypt applepay decrypt configs")?;
 
     #[allow(clippy::expect_used)]
     let applepay_merchant_configs = settings::ApplepayMerchantConfigs::convert_to_raw_secret(
@@ -75,7 +76,7 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt applepay merchant configs");
+    .attach_printable("Failed to decrypt applepay merchant configs")?;
 
     #[allow(clippy::expect_used)]
     let payment_method_auth = settings::PaymentMethodAuth::convert_to_raw_secret(
@@ -83,7 +84,7 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt payment method auth configs");
+    .attach_printable("Failed to decrypt payment method auth configs")?;
 
     #[allow(clippy::expect_used)]
     let key_manager = settings::KeyManagerConfig::convert_to_raw_secret(
@@ -91,7 +92,7 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt keymanager configs");
+    .attach_printable("Failed to decrypt keymanager configs")?;
 
     #[allow(clippy::expect_used)]
     let user_auth_methods = settings::UserAuthMethodSettings::convert_to_raw_secret(
@@ -99,7 +100,7 @@ pub async fn fetch_raw_secrets(
         secret_management_client,
     )
     .await
-    .expect("Failed to decrypt user_auth_methods configs");
+    .attach_printable("Failed to decrypt user_auth_methods configs")?;
 
     #[allow(clippy::expect_used)]
     let network_tokenization_service = match conf.network_tokenization_service {
@@ -109,12 +110,12 @@ pub async fn fetch_raw_secrets(
                 secret_management_client,
             )
             .await
-            .expect("Failed to decrypt network tokenization service configs"),
+            .attach_printable("Failed to decrypt network tokenization service configs")?,
         ),
         None => None,
     };
 
-    Settings {
+    Ok(Settings {
         server: conf.server,
         master_database,
         redis: conf.redis,
@@ -181,5 +182,5 @@ pub async fn fetch_raw_secrets(
             .network_tokenization_supported_card_networks,
         network_tokenization_service,
         network_tokenization_supported_connectors: conf.network_tokenization_supported_connectors,
-    }
+    })
 }

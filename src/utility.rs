@@ -1,6 +1,9 @@
+use diesel_models::enums::ApplicationError;
+use error_stack::ResultExt;
+use router::db::errors::ApplicationResult;
 use time::{macros::format_description, Date, PrimitiveDateTime, Time};
 
-pub fn parse_to_primitive_datetime(date_string: &str) -> Result<PrimitiveDateTime, String> {
+pub fn parse_to_primitive_datetime(date_string: &str) -> ApplicationResult<PrimitiveDateTime> {
     // Define the possible date formats using the `format_description!` macro
     let date_formats = [
         format_description!("[year]-[month]-[day] [hour]:[minute]:[second].[subsecond]"), // e.g., 2024-06-26 02:06:05.123456
@@ -16,12 +19,12 @@ pub fn parse_to_primitive_datetime(date_string: &str) -> Result<PrimitiveDateTim
     }
 
     // If no format matches, try parsing as a date-only string
-    match Date::parse(date_string,  format_description!("[year]-[month]-[day]")){
+    match Date::parse(date_string, format_description!("[year]-[month]-[day]")) {
         Ok(date) => {
             // Combine the parsed date with a default time component
             let default_time = Time::MIDNIGHT;
-            return Ok(date.with_time(default_time))
+            Ok(date.with_time(default_time))
         }
-        Err(_) => return Err("Invalid date format".to_string()),
+        Err(_) => Err(ApplicationError::ConfigurationError).attach_printable("Invalid date format"),
     }
 }

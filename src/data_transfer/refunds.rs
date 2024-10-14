@@ -1,6 +1,9 @@
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::refund::{merchant_id, created_at}, PgPooledConn};
+use diesel_models::{
+    schema::refund::{created_at, merchant_id},
+    PgPooledConn,
+};
 use indicatif::MultiProgress;
 
 use async_bb8_diesel::AsyncRunQueryDsl;
@@ -32,15 +35,15 @@ pub async fn dump_refunds(
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .expect("Failed to get refunds count");
+        .attach_printable("Failed to get refunds count")?;
     // println!("{:?}", diesel_objects_count);
     let refund_progress_bar = multi_progress_bar.add(
         indicatif::ProgressBar::new(
-            diesel_objects_count
-                .try_into()
-                .expect("Failed to convert refund count to u64"),
+            u64::try_from(diesel_objects_count)
+                .change_context(ApplicationError::ConfigurationError)
+                .attach_printable("Failed to convert refund count to u64")?,
         )
-        .with_style(crate::progress_style())
+        .with_style(crate::progress_style()?)
         .with_message(format!(
             "{} Refunds:",
             merchant_key_store.merchant_id.get_string_repr()
@@ -55,10 +58,10 @@ pub async fn dump_refunds(
             .get_results_async::<Refund>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .expect("Failed to get refunds");
+            .attach_printable("Failed to get refunds")?;
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
-                .with_style(crate::progress_style())
+                .with_style(crate::progress_style()?)
                 .with_message(format!(
                     "{} Refunds Batch:",
                     merchant_key_store.merchant_id.get_string_repr()

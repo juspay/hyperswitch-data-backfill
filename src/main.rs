@@ -5,7 +5,8 @@ use backfill_scripe::{
         disputes::dump_disputes, payment_attempt::dump_payment_attempts,
         payment_intent::dump_payment_intents, refunds::dump_refunds,
     },
-    encryption::fetch_raw_secrets, utility::parse_to_primitive_datetime,
+    encryption::fetch_raw_secrets,
+    utility::parse_to_primitive_datetime,
 };
 use common_utils::{id_type::MerchantId, types::keymanager::KeyManagerState};
 use diesel::{associations::HasTable, QueryDsl};
@@ -62,18 +63,21 @@ async fn main() -> ApplicationResult<()> {
 
     #[allow(clippy::expect_used)]
     let secret_conf = Settings::with_config_path(cmd_line.config_path)
-        .expect("Unable to construct application configuration");
+        .attach_printable("Unable to construct application configuration")?;
     #[allow(clippy::expect_used)]
     secret_conf
         .validate()
-        .expect("Failed to validate router configuration");
+        .attach_printable("Failed to validate router configuration")?;
     let secret_management_client = secret_conf
         .secrets_management
         .get_secret_management_client()
         .await
-        .expect("Failed to create secret management client");
+        .change_context(ApplicationError::ConfigurationError)
+        .attach_printable("Failed to create secret management client")?;
 
-    let conf = fetch_raw_secrets(secret_conf, &*secret_management_client).await;
+    let conf = fetch_raw_secrets(secret_conf, &*secret_management_client)
+        .await
+        .change_context(ApplicationError::ConfigurationError)?;
 
     let _guard = router_env::setup(
         &conf.log,
@@ -92,17 +96,18 @@ async fn main() -> ApplicationResult<()> {
     // #[allow(clippy::expect_used)]
     // let server = Box::pin(router::start_server(conf))
     //     .await
-    //     .expect("Failed to create the server");
+    //     .attach_printable("Failed to create the server")?;
     // let _ = server.await;
 
     #[allow(clippy::expect_used)]
-    // let tenant_config = conf.multitenancy.get_tenant(&cmd_line.tenant_id).expect("tenant not found");
+    // let tenant_config = conf.multitenancy.get_tenant(&cmd_line.tenant_id).attach_printable("tenant not found")?;
     #[allow(clippy::expect_used)]
     let _encryption_client = conf
         .encryption_management
         .get_encryption_management_client()
         .await
-        .expect("Failed to create encryption client");
+        .change_context(ApplicationError::ConfigurationError)
+        .attach_printable("Failed to create encryption client")?;
 
     let cache_store = Arc::new(
         RedisStore::new(&conf.redis)
@@ -118,12 +123,14 @@ async fn main() -> ApplicationResult<()> {
         let tenant_config = conf
             .multitenancy
             .get_tenant(&tenant_id)
-            .expect("tenant not found");
+            .ok_or(ApplicationError::ConfigurationError)
+            .attach_printable("tenant not found")?;
         println!("Tenant Config: {:?}", tenant_config);
         tenant = TenantID(tenant_config.clickhouse_database.clone());
         get_store(&conf, tenant_config, Arc::clone(&cache_store), false)
             .await
-            .expect("Failed to create store")
+            .change_context(ApplicationError::ConfigurationError)
+            .attach_printable("Failed to create store")?
     } else {
         tenant = TenantID(conf.multitenancy.global_tenant.clickhouse_database.clone());
         get_store(
@@ -133,7 +140,8 @@ async fn main() -> ApplicationResult<()> {
             false,
         )
         .await
-        .expect("Failed to create store")
+        .change_context(ApplicationError::ConfigurationError)
+        .attach_printable("Failed to create store")?
     };
     let kafka_producer = match conf.events {
         router::events::EventsConfig::Kafka { kafka } => Ok(KafkaProducer::create(&kafka)
@@ -158,14 +166,15 @@ async fn main() -> ApplicationResult<()> {
     };
     let pg_connection = pg_connection_read(&pq_store)
         .await
-        .expect("Failed to get pg connection");
+        .change_context(ApplicationError::ConfigurationError)
+        .attach_printable("Failed to get pg connection")?;
     let multi_progress_bar = indicatif::MultiProgress::new();
     let batch_size = cmd_line.batch_size;
     println!("{},  {}", &cmd_line.start_date, &cmd_line.end_date);
     let start_date = parse_to_primitive_datetime(&cmd_line.start_date)
-        .expect("Failed to parse start_date");
+        .attach_printable("Failed to parse start_date")?;
     let end_date = parse_to_primitive_datetime(&cmd_line.end_date)
-        .expect("Failed to parse end_date");
+        .attach_printable("Failed to parse end_date")?;
     let merchant_stores_count = if cmd_line.merchant_id.is_empty() {
         get_merchant_stores(&pg_connection).await?
     } else {
@@ -174,7 +183,7 @@ async fn main() -> ApplicationResult<()> {
 
     let merchant_progress_bar = multi_progress_bar.add(
         ProgressBar::new(merchant_stores_count as u64)
-            .with_style(backfill_scripe::progress_style())
+            .with_style(backfill_scripe::progress_style()?)
             .with_message("Merchants:"),
     );
     let replica_pool = pq_store.get_replica_pool().to_owned();
@@ -186,8 +195,12 @@ async fn main() -> ApplicationResult<()> {
                     cmd_line
                         .merchant_id
                         .iter()
-                        .map(|s| MerchantId::wrap(s.clone()).expect("failed to parse merchant id"))
-                        .collect(),
+                        .map(|s| {
+                            MerchantId::wrap(s.clone())
+                                .attach_printable("failed to parse merchant id")
+                        })
+                        .collect::<Result<Vec<_>, _>>()
+                        .change_context(ApplicationError::ConfigurationError)?,
                     &Secret::new(pq_store.get_master_key().to_vec()),
                 )
                 .await
@@ -205,7 +218,7 @@ async fn main() -> ApplicationResult<()> {
 
         for merchant_stores_batch in merchant_stores.chunks(cmd_line.parallel) {
             let results = merchant_stores_batch
-                .into_iter()
+                .iter()
                 .cloned()
                 .map(|mks| {
                     let pool = replica_pool.clone();

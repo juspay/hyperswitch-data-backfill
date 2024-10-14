@@ -1,15 +1,18 @@
+use async_bb8_diesel::AsyncRunQueryDsl;
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::dispute::{merchant_id, created_at}, PgPooledConn};
-use indicatif::MultiProgress;
 use diesel_models::dispute::Dispute;
+use diesel_models::{
+    schema::dispute::{created_at, merchant_id},
+    PgPooledConn,
+};
 use error_stack::ResultExt;
 use hyperswitch_domain_models::merchant_key_store::MerchantKeyStore;
+use indicatif::MultiProgress;
 use router::{
     core::errors::{ApplicationError, ApplicationResult},
     db::{kafka_store::TenantID, KafkaProducer},
 };
-use async_bb8_diesel::AsyncRunQueryDsl;
 use time::PrimitiveDateTime;
 
 pub async fn dump_disputes(
@@ -30,15 +33,15 @@ pub async fn dump_disputes(
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .expect("Failed to get disputes count");
-
+        .attach_printable("Failed to get disputes count")?;
+    // println!("{:?}", diesel_objects_count);
     let dispute_progress_bar = multi_progress_bar.add(
         indicatif::ProgressBar::new(
-            diesel_objects_count
-                .try_into()
-                .expect("Failed to convert dispute count to u64"),
+            u64::try_from(diesel_objects_count)
+                .change_context(ApplicationError::ConfigurationError)
+                .attach_printable("Failed to convert dispute count to u64")?,
         )
-        .with_style(crate::progress_style())
+        .with_style(crate::progress_style()?)
         .with_message(format!(
             "{} Disputes:",
             merchant_key_store.merchant_id.get_string_repr()
@@ -54,11 +57,10 @@ pub async fn dump_disputes(
             .get_results_async::<Dispute>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .expect("Failed to get disputes");
-
+            .attach_printable("Failed to get disputes")?;
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
-                .with_style(crate::progress_style())
+                .with_style(crate::progress_style()?)
                 .with_message(format!(
                     "{} Disputes Batch:",
                     merchant_key_store.merchant_id.get_string_repr()

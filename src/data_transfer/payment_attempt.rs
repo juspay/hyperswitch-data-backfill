@@ -1,7 +1,11 @@
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::payment_attempt::{merchant_id, created_at}, PgPooledConn};
+use diesel_models::{
+    schema::payment_attempt::{created_at, merchant_id},
+    PgPooledConn,
+};
 use indicatif::MultiProgress;
 
+use async_bb8_diesel::AsyncRunQueryDsl;
 use diesel_models::payment_attempt::PaymentAttempt as DieselPaymentAttempt;
 use error_stack::ResultExt;
 use hyperswitch_domain_models::{
@@ -13,7 +17,6 @@ use router::{
     db::{kafka_store::TenantID, KafkaProducer},
 };
 use storage_impl::DataModelExt;
-use async_bb8_diesel::AsyncRunQueryDsl;
 use time::PrimitiveDateTime;
 
 pub async fn dump_payment_attempts(
@@ -26,25 +29,25 @@ pub async fn dump_payment_attempts(
     start_date: PrimitiveDateTime,
     end_date: PrimitiveDateTime,
 ) -> ApplicationResult<()> {
-    let payment_attempts_count: i64 = DieselPaymentAttempt::table()
+    let diesel_objects_count: i64 = DieselPaymentAttempt::table()
         .filter(merchant_id.eq(mks.merchant_id.clone()))
         .filter(created_at.between(start_date, end_date))
         .count()
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .expect("Failed to get payment attempts count");
+        .attach_printable("Failed to get payment attempts count")?;
     let pa_progress_bar = multi_progress_bar.add(
         indicatif::ProgressBar::new(
-            payment_attempts_count
-                .try_into()
-                .expect("Failed to convert payment attempts count to u64"),
+            u64::try_from(diesel_objects_count)
+                .change_context(ApplicationError::ConfigurationError)
+                .attach_printable("Failed to convert payment attempts count to u64")?,
         )
-        .with_style(crate::progress_style())
+        .with_style(crate::progress_style()?)
         .with_message(format!("{:?} Payment Attempts:", mks.merchant_id)),
     );
 
-    for batch_offset in (0..payment_attempts_count).step_by(batch_size as usize) {
+    for batch_offset in (0..diesel_objects_count).step_by(batch_size as usize) {
         let payment_attempts = DieselPaymentAttempt::table()
             .filter(merchant_id.eq(mks.merchant_id.clone()))
             .filter(created_at.between(start_date, end_date))
@@ -53,10 +56,10 @@ pub async fn dump_payment_attempts(
             .get_results_async::<DieselPaymentAttempt>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .expect("Failed to get payment attempts");
+            .attach_printable("Failed to get payment attempts")?;
         let batch_progress_bar = multi_progress_bar.add(
             indicatif::ProgressBar::new(batch_size as u64)
-                .with_style(crate::progress_style())
+                .with_style(crate::progress_style()?)
                 .with_message(format!("{:?} Payment Attempts Batch:", mks.merchant_id)),
         );
         for pa in payment_attempts {

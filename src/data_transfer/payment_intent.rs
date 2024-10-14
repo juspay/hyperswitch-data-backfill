@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
-use diesel_models::{schema::payment_intent::{merchant_id, created_at}, PgPooledConn};
+use diesel_models::{
+    schema::payment_intent::{created_at, merchant_id},
+    PgPooledConn,
+};
 use indicatif::MultiProgress;
 
 use async_bb8_diesel::AsyncRunQueryDsl;
@@ -37,15 +40,15 @@ pub async fn dump_payment_intents(
         .get_result_async(conn)
         .await
         .change_context(ApplicationError::ConfigurationError)
-        .expect("Failed to get payment intents count");
+        .attach_printable("Failed to get payment intents count")?;
     let pi_progress_bar = Arc::new(
         multi_progress_bar.add(
             indicatif::ProgressBar::new(
-                diesel_objects_count
-                    .try_into()
-                    .expect("Failed to convert intent count to u64"),
+                u64::try_from(diesel_objects_count)
+                    .change_context(ApplicationError::ConfigurationError)
+                    .attach_printable("Failed to convert intent count to u64")?,
             )
-            .with_style(crate::progress_style())
+            .with_style(crate::progress_style()?)
             .with_message(format!(
                 "{:?} Payment Intents:",
                 merchant_key_store.merchant_id
@@ -64,11 +67,11 @@ pub async fn dump_payment_intents(
             .load_async::<DieselPaymentIntent>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
-            .expect("failed to get payment intents");
+            .attach_printable("failed to get payment intents")?;
         let batch_progress_bar = Arc::new(
             multi_progress_bar.add(
                 indicatif::ProgressBar::new(batch_size as u64)
-                    .with_style(crate::progress_style())
+                    .with_style(crate::progress_style()?)
                     .with_message(format!(
                         "{:?} Payment Intents Batch:",
                         merchant_key_store.merchant_id
