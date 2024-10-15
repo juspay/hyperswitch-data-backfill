@@ -40,7 +40,7 @@ pub struct UtilityOptions {
     #[arg(short = 't', long)]
     pub tenant_id: Option<String>,
 
-    #[arg(short = 'b', long, default_value_t = 1000)]
+    #[arg(short = 'b', long, default_value_t = 10000)]
     pub batch_size: u32,
 
     #[arg(short = 'p', long, default_value_t = 5)]
@@ -254,23 +254,23 @@ async fn main() -> ApplicationResult<()> {
                                 .await
                                 .change_context(ApplicationError::ConfigurationError)?;
 
-                            dump_payment_attempts(
-                                &kafka_producer_int,
-                                &pg_connection,
-                                &multi_progress_bar_int,
-                                tenant_int.clone(),
-                                &mks,
-                                batch_size,
-                                start_date,
-                                end_date,
-                            )
-                            .await?;
                             dump_payment_intents(
                                 &kafka_producer_int,
                                 &pg_connection,
                                 &multi_progress_bar_int,
                                 tenant_int.clone(),
                                 &kms_int,
+                                &mks,
+                                batch_size,
+                                start_date,
+                                end_date,
+                            )
+                            .await?;
+                            dump_payment_attempts(
+                                &kafka_producer_int,
+                                &pg_connection,
+                                &multi_progress_bar_int,
+                                tenant_int.clone(),
                                 &mks,
                                 batch_size,
                                 start_date,

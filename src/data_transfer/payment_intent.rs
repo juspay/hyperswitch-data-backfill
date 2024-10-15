@@ -3,7 +3,7 @@ use std::sync::Arc;
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
 use diesel_models::{
-    schema::payment_intent::{created_at, merchant_id},
+    schema::payment_intent::{created_at, merchant_id, payment_id},
     PgPooledConn,
 };
 use indicatif::MultiProgress;
@@ -64,6 +64,7 @@ pub async fn dump_payment_intents(
             .filter(created_at.between(start_date, end_date))
             .limit(batch_size as i64)
             .offset(batch_offset)
+            .order(payment_id)
             .load_async::<DieselPaymentIntent>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)

@@ -1,7 +1,7 @@
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
 use diesel_models::{
-    schema::refund::{created_at, merchant_id},
+    schema::refund::{created_at, merchant_id, refund_id},
     PgPooledConn,
 };
 use indicatif::MultiProgress;
@@ -55,6 +55,7 @@ pub async fn dump_refunds(
             .filter(created_at.between(start_date, end_date))
             .limit(batch_size as i64)
             .offset(batch_offset)
+            .order(refund_id)
             .get_results_async::<Refund>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)

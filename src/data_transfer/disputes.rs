@@ -2,6 +2,7 @@ use async_bb8_diesel::AsyncRunQueryDsl;
 use common_utils::types::keymanager::KeyManagerState;
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
 use diesel_models::dispute::Dispute;
+use diesel_models::schema::dispute::dispute_id;
 use diesel_models::{
     schema::dispute::{created_at, merchant_id},
     PgPooledConn,
@@ -54,6 +55,7 @@ pub async fn dump_disputes(
             .filter(created_at.between(start_date, end_date))
             .limit(batch_size as i64)
             .offset(batch_offset)
+            .order(dispute_id)
             .get_results_async::<Dispute>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
