@@ -312,6 +312,11 @@ async fn main() -> ApplicationResult<()> {
             }
         }
     }
+    logger::debug!("Flushing Kafka Producer");
+    let flush_progress = multi_progress_bar.add(ProgressBar::new_spinner());
+    flush_progress.set_message("Flushing Kafka Producer");
+    kafka_producer.flush_kafka().change_context(ApplicationError::ConfigurationError)?;
+    flush_progress.finish_and_clear();
 
     // Get Payment Counts from Payment Table
     // For each payment_batch

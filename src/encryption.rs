@@ -114,6 +114,14 @@ pub async fn fetch_raw_secrets(
         ),
         None => None,
     };
+    let paze_decrypt_keys = match conf.paze_decrypt_keys {
+        Some(paze_decrypt_keys) => Some(
+            settings::PazeDecryptConfig::convert_to_raw_secret(paze_decrypt_keys, secret_management_client)
+                .await
+                .attach_printable("Failed to decrypt paze decrypt configs")?,
+        ),
+        None => None,
+    };
 
     Ok(Settings {
         server: conf.server,
@@ -182,5 +190,6 @@ pub async fn fetch_raw_secrets(
             .network_tokenization_supported_card_networks,
         network_tokenization_service,
         network_tokenization_supported_connectors: conf.network_tokenization_supported_connectors,
+        paze_decrypt_keys
     })
 }

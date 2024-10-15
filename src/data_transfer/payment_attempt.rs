@@ -1,6 +1,6 @@
 use diesel::{associations::HasTable, ExpressionMethods, QueryDsl};
 use diesel_models::{
-    schema::payment_attempt::{created_at, merchant_id, payment_id},
+    schema::payment_attempt::{attempt_id, created_at, merchant_id},
     PgPooledConn,
 };
 use indicatif::MultiProgress;
@@ -53,7 +53,7 @@ pub async fn dump_payment_attempts(
             .filter(created_at.between(start_date, end_date))
             .limit(batch_size as i64)
             .offset(batch_offset)
-            .order_by(payment_id)
+            .order_by(attempt_id)
             .get_results_async::<DieselPaymentAttempt>(conn)
             .await
             .change_context(ApplicationError::ConfigurationError)
