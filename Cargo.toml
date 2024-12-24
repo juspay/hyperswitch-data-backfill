@@ -8,13 +8,13 @@ release = ["router/release"]
 
 [dependencies]
 async-bb8-diesel = { git = "https://github.com/jarnura/async-bb8-diesel", rev = "53b4ab901aab7635c8215fd1c2d542c8db443094" }
-router = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
-diesel_models = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
-storage_impl = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
-router_env = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
-hyperswitch_interfaces = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
-common_utils = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
-hyperswitch_domain_models = { git = "https://github.com/juspay/hyperswitch", rev = "78eac8807b2d942ddd245db1ad4d25984160f41a" }
+router = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
+diesel_models = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
+storage_impl = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
+router_env = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
+hyperswitch_interfaces = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
+common_utils = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
+hyperswitch_domain_models = { git = "https://github.com/juspay/hyperswitch", tag = "2024.12.24.0" }
 diesel = { version = "2.2.3", features = ["postgres"] }
 error-stack = "0.4.1"
 tokio = "1.40.0"

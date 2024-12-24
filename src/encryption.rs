@@ -190,6 +190,8 @@ pub async fn fetch_raw_secrets(
             .network_tokenization_supported_card_networks,
         network_tokenization_service,
         network_tokenization_supported_connectors: conf.network_tokenization_supported_connectors,
-        paze_decrypt_keys
+        paze_decrypt_keys,
+        theme: conf.theme,
+        platform: conf.platform,
     })
 }

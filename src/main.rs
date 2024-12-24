@@ -38,7 +38,7 @@ pub struct UtilityOptions {
     pub config_path: Option<PathBuf>,
 
     #[arg(short = 't', long)]
-    pub tenant_id: Option<String>,
+    pub tenant_id: Option<TenantID>,
 
     #[arg(short = 'b', long, default_value_t = 10000)]
     pub batch_size: u32,
@@ -90,7 +90,7 @@ async fn main() -> ApplicationResult<()> {
 
     // Spawn a thread for collecting metrics at fixed intervals
     metrics::bg_metrics_collector::spawn_metrics_collector(
-        &conf.log.telemetry.bg_metrics_collection_interval_in_secs,
+        conf.log.telemetry.bg_metrics_collection_interval_in_secs,
     );
 
     // #[allow(clippy::expect_used)]
@@ -118,7 +118,7 @@ async fn main() -> ApplicationResult<()> {
 
     let tenant;
     #[allow(clippy::expect_used)]
-    let pq_store = if let Some(tenant_id) = cmd_line.tenant_id {
+    let pq_store = if let Some(id_type) = cmd_line.tenant_id {
         println!("Tenant ID: {:?}", tenant_id);
         let tenant_config = conf
             .multitenancy
