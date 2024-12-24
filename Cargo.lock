@@ -333,7 +333,7 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 [[package]]
 name = "analytics"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "actix-web",
  "api_models",
@@ -439,7 +439,7 @@ checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 [[package]]
 name = "api_models"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "actix-multipart",
  "actix-web",
@@ -1755,7 +1755,7 @@ dependencies = [
 [[package]]
 name = "cards"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "common_utils",
  "error-stack",
@@ -1936,7 +1936,7 @@ checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 [[package]]
 name = "common_enums"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "diesel",
  "masking",
@@ -1951,7 +1951,7 @@ dependencies = [
 [[package]]
 name = "common_types"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "common_enums",
  "common_utils",
@@ -1964,7 +1964,7 @@ dependencies = [
 [[package]]
 name = "common_utils"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2337,7 +2337,7 @@ dependencies = [
 [[package]]
 name = "currency_conversion"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "common_enums",
  "rust_decimal",
@@ -2500,7 +2500,7 @@ dependencies = [
 [[package]]
 name = "diesel_models"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "async-bb8-diesel",
  "common_enums",
@@ -2759,7 +2759,7 @@ dependencies = [
 [[package]]
 name = "euclid"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "common_enums",
  "common_utils",
@@ -2777,7 +2777,7 @@ dependencies = [
 [[package]]
 name = "euclid_macros"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2810,7 +2810,7 @@ dependencies = [
 [[package]]
 name = "events"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "error-stack",
  "masking",
@@ -2824,7 +2824,7 @@ dependencies = [
 [[package]]
 name = "external_services"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "api_models",
  "async-trait",
@@ -3643,7 +3643,7 @@ dependencies = [
 [[package]]
 name = "hyperswitch_connectors"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -3661,6 +3661,7 @@ dependencies = [
  "hyperswitch_domain_models",
  "hyperswitch_interfaces",
  "image",
+ "lazy_static",
  "masking",
  "mime",
  "once_cell",
@@ -3687,7 +3688,7 @@ dependencies = [
 [[package]]
 name = "hyperswitch_constraint_graph"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "erased-serde 0.3.31",
  "graphviz-rust",
@@ -3700,7 +3701,7 @@ dependencies = [
 [[package]]
 name = "hyperswitch_domain_models"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "actix-web",
  "api_models",
@@ -3730,7 +3731,7 @@ dependencies = [
 [[package]]
 name = "hyperswitch_interfaces"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "actix-web",
  "api_models",
@@ -4210,7 +4211,7 @@ dependencies = [
 [[package]]
 name = "kgraph_utils"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "api_models",
  "common_enums",
@@ -4410,7 +4411,7 @@ dependencies = [
 [[package]]
 name = "masking"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "diesel",
  "erased-serde 0.4.5",
@@ -5392,7 +5393,7 @@ checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 [[package]]
 name = "pm_auth"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "api_models",
  "async-trait",
@@ -5746,7 +5747,7 @@ dependencies = [
 [[package]]
 name = "redis_interface"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "common_utils",
  "error-stack",
@@ -6017,7 +6018,7 @@ dependencies = [
 [[package]]
 name = "router"
 version = "0.2.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "actix-cors",
  "actix-http",
@@ -6120,7 +6121,7 @@ dependencies = [
 [[package]]
 name = "router_derive"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "indexmap 2.7.0",
  "proc-macro2",
@@ -6133,7 +6134,7 @@ dependencies = [
 [[package]]
 name = "router_env"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "cargo_metadata",
  "config",
@@ -6460,7 +6461,7 @@ dependencies = [
 [[package]]
 name = "scheduler"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "async-trait",
  "common_utils",
@@ -7140,7 +7141,7 @@ dependencies = [
 [[package]]
 name = "storage_impl"
 version = "0.1.0"
-source = "git+https://github.com/juspay/hyperswitch?tag=2024.12.24.0#e48e76b5206e0c8ca85f4929ba18aa31c9726025"
+source = "git+https://github.com/juspay/hyperswitch?rev=5024c6b522342e145f24936a1c37680452c105f1#5024c6b522342e145f24936a1c37680452c105f1"
 dependencies = [
  "api_models",
  "async-bb8-diesel",

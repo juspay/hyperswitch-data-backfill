@@ -8,7 +8,7 @@ use backfill_scripe::{
     encryption::fetch_raw_secrets,
     utility::parse_to_primitive_datetime,
 };
-use common_utils::{id_type::MerchantId, types::keymanager::KeyManagerState};
+use common_utils::{id_type::{MerchantId, TenantId}, types::keymanager::KeyManagerState};
 use diesel::{associations::HasTable, QueryDsl};
 use error_stack::ResultExt;
 use indicatif::ProgressBar;
@@ -38,7 +38,7 @@ pub struct UtilityOptions {
     pub config_path: Option<PathBuf>,
 
     #[arg(short = 't', long)]
-    pub tenant_id: Option<TenantID>,
+    pub tenant_id: Option<String>,
 
     #[arg(short = 'b', long, default_value_t = 10000)]
     pub batch_size: u32,
@@ -118,7 +118,8 @@ async fn main() -> ApplicationResult<()> {
 
     let tenant;
     #[allow(clippy::expect_used)]
-    let pq_store = if let Some(id_type) = cmd_line.tenant_id {
+    let pq_store = if let Some(tenant_id) = cmd_line.tenant_id {
+        let tenant_id = TenantId::try_from_string(tenant_id).expect("Failed to parse tenant ID as ID type");
         println!("Tenant ID: {:?}", tenant_id);
         let tenant_config = conf
             .multitenancy
